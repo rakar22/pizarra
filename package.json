@@ -1,0 +1,9 @@
+{
+  "name": "pizarra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pizarra - football analytics dashboard",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
