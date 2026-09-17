@@ -1,9 +1,10 @@
 {
   "name": "pizarra",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Pizarra - football analytics dashboard",
-  "scripts": {
-    "start": "npx serve ."
-  }
+  "type": "module",
+  "description": "Pizarra - football analytics and value research dashboard",
+  "scripts": {"dev":"vite","build":"vite build","preview":"vite preview","start":"vite preview"},
+  "dependencies": {"@vitejs/plugin-react":"latest","vite":"latest","react":"latest","react-dom":"latest","lucide-react":"latest"},
+  "devDependencies": {}
 }
