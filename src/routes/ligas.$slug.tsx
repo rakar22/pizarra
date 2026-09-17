@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react";
-import { getLeague } from "@/lib/football/server";
+import { getLeagueFast } from "@/lib/football/league-server";
 import { LEAGUE_BY_SLUG } from "@/lib/football/leagues";
 import { MatchCard } from "@/components/match-card";
 import { PageHeader } from "@/components/page-header";
@@ -9,18 +9,33 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/ligas/$slug")({
-  loader: ({ params }) => getLeague({ data: { slug: params.slug } }),
+  loader: ({ params }) => getLeagueFast({ data: { slug: params.slug } }),
+  preloadStaleTime: 30_000,
+  pendingMs: 250,
+  pendingMinMs: 300,
+  pendingComponent: LeaguePending,
   component: LeaguePage,
 });
+
+function LeaguePending() {
+  return (
+    <main aria-busy="true" aria-label="Cargando liga">
+      <div className="mb-2 h-11 w-24 animate-pulse rounded-full bg-surface" />
+      <Skeleton className="h-20 rounded-[16px]" />
+      <Skeleton className="mt-4 h-96 rounded-[16px]" />
+    </main>
+  );
+}
 
 function LeaguePage() {
   const { slug } = Route.useParams();
   const def = LEAGUE_BY_SLUG[slug];
   const initial = Route.useLoaderData();
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["league", slug],
-    queryFn: () => getLeague({ data: { slug } }),
+    queryFn: () => getLeagueFast({ data: { slug } }),
     initialData: initial,
+    staleTime: 30_000,
   });
 
   const table = data?.table;
@@ -30,6 +45,7 @@ function LeaguePage() {
     <main>
       <Link
         to="/ligas"
+        preload="intent"
         className="-mx-1 mb-2 inline-flex h-11 items-center gap-0.5 text-[17px] font-medium text-accent"
       >
         <ChevronLeft className="size-6" strokeWidth={2.2} />
@@ -41,6 +57,20 @@ function LeaguePage() {
       </PageHeader>
 
       {isLoading && <Skeleton className="mt-2 h-96 rounded-[16px]" />}
+
+      {isError && (
+        <div className="ios-group mt-3 p-5" role="alert">
+          <p className="text-[15px] font-semibold">No se pudieron cargar los datos de esta liga.</p>
+          <p className="mt-1 text-[13px] text-muted">Puedes reintentar sin salir de la página.</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-4 inline-flex h-10 items-center rounded-full bg-fg px-4 text-[13px] font-semibold text-bg"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
 
       {table && (
         <div className="ios-group overflow-x-auto">
@@ -87,6 +117,13 @@ function LeaguePage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!isLoading && !isError && !table && matches.length === 0 && (
+        <div className="ios-group mt-3 p-5">
+          <p className="text-[15px] font-semibold">Datos de la liga no disponibles ahora.</p>
+          <p className="mt-1 text-[13px] text-muted">La fuente puede estar temporalmente sin datos. Prueba de nuevo más tarde.</p>
         </div>
       )}
 
