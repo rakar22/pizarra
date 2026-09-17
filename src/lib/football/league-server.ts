@@ -2,8 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { cachedJsonSoft } from "./fetch";
 import { LEAGUE_BY_SLUG } from "./leagues";
-import { parseHeaderEvents, parseOpenLiga, parseStandings, type EspnHeader, type EspnStandings, type OlMatch } from "./parse";
-import type { BoardPayload, LeagueTable, Match } from "./types";
+import {
+  parseHeaderEvents,
+  parseOpenLiga,
+  parseStandings,
+  type EspnHeader,
+  type EspnStandings,
+  type OlMatch,
+} from "./parse";
+import type { LeagueTable, Match } from "./types";
 
 const HEADER = "https://site.web.api.espn.com/apis/v2/scoreboard/header";
 const STANDINGS = "https://site.api.espn.com/apis/v2/sports/soccer";
@@ -59,7 +66,3 @@ async function loadLeagueData(slug: string): Promise<LeaguePayload> {
 export const getLeagueFast = createServerFn({ method: "GET" })
   .validator(z.object({ slug: z.string().min(1) }))
   .handler(async ({ data }) => loadLeagueData(data.slug));
-
-export function emptyLeaguePayload(slug: string): LeaguePayload {
-  return { table: null, matches: [], generatedAt: new Date().toISOString() };
-}
