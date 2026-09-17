@@ -72,7 +72,7 @@ export async function liveBet365(
   if (!book) return { match, lines };
 
   const patch = new Map<string, number>();
-  let next: MarketOdds = {
+  const next: MarketOdds = {
     home: match.odds?.home ?? 0,
     draw: match.odds?.draw,
     away: match.odds?.away ?? 0,

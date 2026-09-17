@@ -83,10 +83,6 @@ export function getConnectorAccessToken(): string | null {
 
 export { isWorkspacePreview } from "../env.server.ts";
 
-// Digest of the last preview token the gate answered 401 for. The readiness
-// probe reports "not ready" while that exact token is still the one on the
-// request, so the client waits for the preview panel to push a fresh token
-// instead of re-calling the gate with a token already known to be rejected.
 let rejectedTokenDigest: string | null = null;
 
 function tokenDigest(token: string): string {
@@ -101,11 +97,6 @@ function noteTokenAccepted(token: string): void {
   if (rejectedTokenDigest === tokenDigest(token)) rejectedTokenDigest = null;
 }
 
-/**
- * True when the inbound request carries a connector token the gate has not
- * rejected. This is what the preview readiness probe reports; it never calls
- * the gate.
- */
 export function isConnectorTokenReady(): boolean {
   const token = inboundContext().token;
   return token !== null && tokenDigest(token) !== rejectedTokenDigest;
@@ -142,9 +133,7 @@ async function gatePost(
     accept: "application/json",
     authorization: `Bearer ${token}`,
   };
-  if (ctx.publicHost) {
-    headers["x-forwarded-host"] = ctx.publicHost;
-  }
+  if (ctx.publicHost) headers["x-forwarded-host"] = ctx.publicHost;
 
   const res = await fetch(`${base}/call-tool`, {
     method: "POST",
@@ -206,9 +195,6 @@ function pendingTokenResult(reason: string): CallToolResult {
   };
 }
 
-// Deployed apps only reach here when the request bypassed the gate (the gate
-// injects the token on every proxied request), so a sign-in redirect cannot
-// fix it: no loginRequired / loginUrl.
 function missingAuthResult(): CallToolResult {
   if (isWorkspacePreview()) return pendingTokenResult(PENDING_TOKEN_MISSING);
   return {
@@ -278,7 +264,9 @@ function tokenIdentityKey(token: string): string {
             .digest("base64url");
         }
       }
-    } catch {}
+    } catch {
+      // Fall back to hashing the complete token when the JWT payload is malformed.
+    }
   }
   return createHash("sha256").update(token).digest("base64url");
 }
@@ -341,9 +329,7 @@ export async function callTool(
 
   const ctx = inboundContext();
   const token = options.token ?? ctx.token;
-  if (!token) {
-    return missingAuthResult();
-  }
+  if (!token) return missingAuthResult();
 
   const connectorType = options.connectorType;
   if (!connectorType) {
@@ -364,9 +350,7 @@ export async function callTool(
     tokenIdentityKey(token),
   ]);
   const memoized = memoizedFailure(memoKey);
-  if (memoized) {
-    return memoized;
-  }
+  if (memoized) return memoized;
   const fail = (errorMessage: string): CallToolResult =>
     memoizeFailure(memoKey, { ok: false, data: null, errorMessage });
   if (connectorType === ConnectorType.Mcp && !options?.connectorCatalogId) {
@@ -390,22 +374,12 @@ export async function callTool(
       token,
     );
 
-    if (status === 401) {
-      return unauthorizedResult(ctx, json, token);
-    }
+    if (status === 401) return unauthorizedResult(ctx, json, token);
     noteTokenAccepted(token);
-    if (status === 403) {
-      return fail(json.errorMessage ?? "access_denied");
-    }
-    if (json.errorMessage && json.ok === false) {
-      return fail(json.errorMessage);
-    }
-    if (status >= 400 && json.ok !== true) {
-      return fail(json.errorMessage ?? `HTTP ${status}`);
-    }
-    if (json.ok === false) {
-      return fail(json.errorMessage ?? "tool error");
-    }
+    if (status === 403) return fail(json.errorMessage ?? "access_denied");
+    if (json.errorMessage && json.ok === false) return fail(json.errorMessage);
+    if (status >= 400 && json.ok !== true) return fail(json.errorMessage ?? `HTTP ${status}`);
+    if (json.ok === false) return fail(json.errorMessage ?? "tool error");
     return { ok: true, data: json.data ?? null };
   } catch (e) {
     return fail(e instanceof Error ? e.message : String(e));

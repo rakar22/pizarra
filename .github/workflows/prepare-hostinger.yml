@@ -1,0 +1,52 @@
+name: Prepare Pizarra for Hostinger
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/league-navigation-audit]
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Football tests
+        run: npm run test:football
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        env:
+          NITRO_PRESET: node-server
+        run: npm run build
+
+      - name: Verify Hostinger server output
+        run: |
+          test -d .output
+          test -f .output/server/index.mjs
+          test -d .output/public
+          echo "Hostinger package validated: .output/server/index.mjs + .output/public"
+
+      - name: Verify common secret formats are absent
+        run: |
+          if git grep -nE '(sk-[A-Za-z0-9_-]{20,}|xai-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]+PRIVATE KEY-----)' -- ':!*.lock' ':!*.md' ':!*.example'; then
+            echo "Potential hard-coded secret detected in tracked source files."
+            exit 1
+          fi
+          echo "No common hard-coded secret formats detected."

@@ -27,7 +27,7 @@ function LigasPage() {
 
       {isLoading && <Skeleton className="h-80 rounded-[16px]" />}
 
-      <div className="ios-group">
+      <div className="ios-group" aria-label="Listado de ligas">
         {rows.map((l) => {
           const table = data?.tables[l.slug];
           const leader = table?.rows[0];
@@ -37,7 +37,10 @@ function LigasPage() {
               key={l.slug}
               to="/ligas/$slug"
               params={{ slug: l.slug }}
-              className="flex min-h-[64px] items-center gap-3 px-4 py-3 active:bg-black/[0.04]"
+              preload="intent"
+              preloadDelay={0}
+              aria-label={`Abrir ${l.name}`}
+              className="flex min-h-[64px] items-center gap-3 px-4 py-3 transition-colors active:bg-black/[0.04]"
             >
               <div className="min-w-0 flex-1">
                 <p className="text-[12px] font-medium text-muted">{l.country}</p>
@@ -47,7 +50,7 @@ function LigasPage() {
                   {n ? ` · ${n} en agenda` : ""}
                 </p>
               </div>
-              <ChevronRight className="size-[18px] shrink-0 text-faint" strokeWidth={2.4} />
+              <ChevronRight className="size-[18px] shrink-0 text-faint" strokeWidth={2.4} aria-hidden="true" />
             </Link>
           );
         })}
