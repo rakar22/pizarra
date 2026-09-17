@@ -9,15 +9,17 @@
 - Carga de agenda real desde ESPN para las principales ligas configuradas.
 - Fallback DEMO explícito cuando las fuentes no devuelven eventos.
 - Motor Poisson transparente para 1X2 y Over/Under 2.5.
-- Modelo Dixon-Coles implementado para ajustar los marcadores de baja puntuación y normalizar sus probabilidades.
-- Comparación Poisson vs Dixon-Coles disponible de forma descriptiva; no se selecciona un modelo ganador sin validación fuera de muestra.
+- Modelo Dixon-Coles implementado como segunda capa para corregir la zona de baja anotación.
 - Pipeline de modelo conectado a estadísticas GF/GA de standings cuando hay datos suficientes.
-- Backtesting histórico rolling disponible con separación temporal y métricas Brier, Log Loss y calibración.
 - Value Engine con probabilidad implícita, edge, EV, de-vig y Kelly a un cuarto.
 - Gates de calidad para impedir señales cuando faltan datos o el edge es insuficiente.
 - Registro multi-fuente con ESPN, OpenLigaDB y TheSportsDB.
+- Adaptador de cuotas normalizado preparado para integración server-side sin exponer credenciales.
+- Backtesting rolling cronológico sin fuga del resultado del partido al momento de predecir.
+- Brier Score, Log Loss, bins de calibración, ECE y MCE como métricas descriptivas.
+- Comparación Poisson vs Dixon-Coles sin declarar un modelo ganador antes de la validación out-of-sample.
 - Búsqueda, actualización manual, estados de carga/error y panel de fuentes.
-- Tests unitarios del núcleo matemático, modelos, backtesting y Value Engine, además de CI para test + build.
+- Tests unitarios del núcleo matemático, backtesting, calibración y Value Engine, además de CI para test + build.
 - Sin claves API hardcodeadas ni ejecución automática de apuestas.
 
 ## Configuración
@@ -42,11 +44,13 @@ Data Registry → ESPN / OpenLigaDB / TheSportsDB / Odds providers
   ↓
 Normalization layer
   ↓
-Team stats → Poisson + Dixon-Coles → model comparison
+Team stats → Poisson / Dixon-Coles → probabilities
   ↓
 Odds normalization → de-vig → Value Engine → quality gates
   ↓
-Historical rolling backtest → calibration → Scout IA → Bankroll analytics
+Historical events → rolling backtest → calibration (Brier / Log Loss / ECE / MCE)
+  ↓
+Scout IA evidence layer → Bankroll analytics
 ```
 
 ## Desarrollo
@@ -62,12 +66,13 @@ GitHub Actions ejecuta automáticamente `npm test` y `npm run build` en pushes y
 
 ## Próximas fases
 
-1. Completar contratos y normalización con fixtures reales de cada proveedor.
-2. Integrar un proveedor de cuotas con API key almacenada únicamente en variables de entorno del servidor.
-3. Conectar histórico real suficiente y reportar calibración/ECE únicamente cuando el tamaño de muestra sea adecuado.
-4. Validar Poisson vs Dixon-Coles y, posteriormente, un ensemble ML mediante backtesting fuera de muestra.
-5. Scout IA con evidencia, procedencia y trazabilidad para cada afirmación.
-6. Base de datos, caché, sincronización idempotente y health checks reales de proveedores.
-7. Tests de integración, observabilidad y despliegue final.
+1. Completar contratos y normalización entre proveedores reales.
+2. Integrar un proveedor de cuotas real mediante un backend/serverless y secretos de despliegue.
+3. Ingesta histórica persistente para activar backtesting y calibración con muestras suficientes.
+4. Estimar parámetros Dixon-Coles a partir del histórico en lugar de depender de `rho` por defecto.
+5. Añadir modelos ML como ensemble únicamente después de comparar de forma reproducible y out-of-sample.
+6. Scout IA con evidencia, timestamps y fuentes asociadas a cada afirmación.
+7. Base de datos, caché, sincronización idempotente y health checks reales de proveedores.
+8. Tests de integración, observabilidad y despliegue final.
 
 > 18+. Juego responsable. Pizarra es una herramienta de análisis y no garantiza resultados ni constituye asesoramiento financiero.
