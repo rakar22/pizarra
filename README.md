@@ -9,10 +9,12 @@
 - Carga de agenda real desde ESPN para las principales ligas configuradas.
 - Fallback DEMO explícito cuando las fuentes no devuelven eventos.
 - Motor Poisson transparente para 1X2 y Over/Under 2.5.
-- Cálculo de probabilidad implícita, edge y Kelly a un cuarto.
+- Pipeline de modelo conectado a estadísticas GF/GA de standings cuando hay datos suficientes.
+- Value Engine con probabilidad implícita, edge, EV, de-vig y Kelly a un cuarto.
+- Gates de calidad para impedir señales cuando faltan datos o el edge es insuficiente.
 - Registro multi-fuente con ESPN, OpenLigaDB y TheSportsDB.
 - Búsqueda, actualización manual, estados de carga/error y panel de fuentes.
-- Tests unitarios del núcleo matemático y CI para test + build.
+- Tests unitarios del núcleo matemático, modelo y Value Engine, además de CI para test + build.
 - Sin claves API hardcodeadas ni ejecución automática de apuestas.
 
 ## Configuración
@@ -37,11 +39,11 @@ Data Registry → ESPN / OpenLigaDB / TheSportsDB / Odds providers
   ↓
 Normalization layer
   ↓
-Poisson / future Dixon-Coles / ML ensemble
+Team stats → Poisson model → probabilities
   ↓
-Value Engine
+Odds normalization → de-vig → Value Engine → quality gates
   ↓
-Scout IA + Backtesting + Bankroll
+Backtesting → calibration → Scout IA → Bankroll analytics
 ```
 
 ## Desarrollo
