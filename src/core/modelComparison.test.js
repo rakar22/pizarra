@@ -15,10 +15,13 @@ test('evaluates a model without ranking or selecting a winner', () => {
   assert.equal(result.calibrationStatus, 'insufficient_sample');
   assert.ok(Number.isFinite(result.brierScore));
   assert.ok(Number.isFinite(result.logLoss));
+  assert.ok(Number.isFinite(result.ece));
+  assert.ok(Number.isFinite(result.mce));
 });
 
 test('compares Poisson and Dixon-Coles descriptively', () => {
   const result = compareModels({ poisson: rows, dixonColes: rows });
   assert.deepEqual(result.map((item) => item.model), ['poisson', 'dixon-coles']);
   assert.ok(result.every((item) => item.matches === 2));
+  assert.ok(result.every((item) => item.calibrationStatus === 'insufficient_sample'));
 });
