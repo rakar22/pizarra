@@ -43,12 +43,10 @@ jobs:
           test -d .output/public
           echo "Hostinger package validated: .output/server/index.mjs + .output/public"
 
-      - name: Verify obvious secret assignments are absent
+      - name: Verify common secret formats are absent
         run: |
-          if grep -RInE '(API_KEY|SECRET_KEY|PASSWORD|TOKEN)[[:space:]]*=' \
-            --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.output \
-            --exclude='*.lock' --exclude='*.yml' --exclude='*.yaml' .; then
-            echo "Potential secret assignment found in repository files."
+          if git grep -nE '(sk-[A-Za-z0-9_-]{20,}|xai-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]+PRIVATE KEY-----)' -- ':!*.lock' ':!*.md' ':!*.example'; then
+            echo "Potential hard-coded secret detected in tracked source files."
             exit 1
           fi
-          echo "No obvious secret assignments detected in source files."
+          echo "No common hard-coded secret formats detected."
