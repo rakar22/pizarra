@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { LEAGUES, LEAGUE_BY_SLUG, resolveLeague } from "./leagues";
+import { LEAGUES, LEAGUE_BY_SLUG, resolveLeague } from "./leagues.ts";
 
 test("league registry has unique slugs and every listed league resolves", () => {
   const slugs = LEAGUES.map((league) => league.slug);
