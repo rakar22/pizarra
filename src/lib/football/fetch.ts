@@ -3,7 +3,7 @@ const cache = new Map<string, { at: number; data: unknown }>();
 const UA = "Pizarra/1.0 (football analysis)";
 const FETCH_TIMEOUT_MS = 10_000;
 
-function requestSignal(signal?: AbortSignal): AbortSignal {
+function requestSignal(signal?: AbortSignal | null): AbortSignal {
   const timeout = AbortSignal.timeout(FETCH_TIMEOUT_MS);
   if (!signal) return timeout;
   return AbortSignal.any([signal, timeout]);
