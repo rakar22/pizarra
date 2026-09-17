@@ -9,15 +9,15 @@ test('calculates weighted ECE and MCE from populated bins', () => {
   ], { minSamples: 2 });
   assert.equal(result.samples, 2);
   assert.equal(result.status, 'descriptive');
-  assert.equal(result.ece, 0.2);
-  assert.equal(result.mce, 0.2);
+  assert.ok(Math.abs(result.ece - 0.2) < 1e-12);
+  assert.ok(Math.abs(result.mce - 0.2) < 1e-12);
 });
 
 test('does not claim calibration with insufficient samples', () => {
   const result = calibrationError([{ probability: 0.5, outcome: 1 }], { minSamples: 100 });
   assert.equal(result.status, 'insufficient_sample');
   assert.equal(result.samples, 1);
-  assert.equal(result.ece, 0.5);
+  assert.ok(Math.abs(result.ece - 0.5) < 1e-12);
 });
 
 test('rejects invalid minimum sample thresholds', () => {
