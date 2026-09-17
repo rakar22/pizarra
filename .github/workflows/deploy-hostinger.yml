@@ -1,0 +1,47 @@
+name: Deploy Pizarra to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint
+      - name: Build for Hostinger Node.js
+        env:
+          NITRO_PRESET: node-server
+        run: npm run build
+      - name: Verify Nitro output
+        run: test -f .output/server/index.mjs
+      - name: Package deployment artifact
+        run: tar -czf pizarra-hostinger-node.tar.gz .output package.json package-lock.json
+      - name: Upload deployment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pizarra-hostinger-node
+          path: pizarra-hostinger-node.tar.gz
+          if-no-files-found: error
+
+  deploy:
+    needs: build
+    if: ${{ secrets.HOSTINGER_API_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hostinger deployment handoff
+        run: |
+          echo "Build artifact validated for pizarra.utilix.cloud."
+          echo "Configure Hostinger Node.js/Git deployment for this repository and NITRO_PRESET=node-server."
+          echo "The Hostinger token is intentionally not printed or stored in the repository."
