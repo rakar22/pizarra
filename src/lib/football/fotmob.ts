@@ -90,7 +90,7 @@ function per90FromPlayer(p: FmPlayer) {
   for (const g of groups) {
     for (const s of g.items ?? []) {
       const id = (s.localizedTitleId || s.title || "").toLowerCase();
-      const v = s.per90 ?? Number(s.statValue) ?? 0;
+      const v = s.per90 ?? Number(s.statValue);
       if (!Number.isFinite(v)) continue;
       if (id === "shots") out.shots = v;
       else if (id === "shotsontarget" || id.includes("shots_on_target") || id.includes("shots on target")) {
