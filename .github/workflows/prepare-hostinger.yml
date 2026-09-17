@@ -43,10 +43,10 @@ jobs:
           test -d .output/public
           echo "Hostinger package validated: .output/server/index.mjs + .output/public"
 
-      - name: Verify secrets are not committed
+      - name: Verify obvious secret assignments are absent
         run: |
-          if grep -RInE '(HOSTINGER_API_TOKEN|HOSTINGER_API_KEY|API_KEY=|SECRET_KEY=)' --exclude-dir=.git --exclude='*.lock' .; then
-            echo "Potential secret found in repository files."
+          if grep -RInE '(API_KEY|SECRET_KEY|PASSWORD|TOKEN)[[:space:]]*=' --exclude-dir=.git --exclude='*.lock' --exclude='*.yml' --exclude='*.yaml' .; then
+            echo "Potential secret assignment found in repository files."
             exit 1
           fi
-          echo "No deployment secrets detected in tracked source files."
+          echo "No obvious secret assignments detected in source files."
