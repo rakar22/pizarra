@@ -64,5 +64,5 @@ async function loadLeagueData(slug: string): Promise<LeaguePayload> {
 }
 
 export const getLeagueFast = createServerFn({ method: "GET" })
-  .validator(z.object({ slug: z.string().min(1) }))
+  .inputValidator(z.object({ slug: z.string().min(1) }))
   .handler(async ({ data }) => loadLeagueData(data.slug));
