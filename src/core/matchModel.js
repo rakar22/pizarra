@@ -8,17 +8,32 @@ function number(value, fallback = 0) {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function validTeamStats(team) {
+  if (!team || Number(team.games) < MIN_GAMES) return false;
+  return ['goalsFor', 'goalsAgainst'].every((key) => {
+    const value = Number(team[key]);
+    return Number.isFinite(value) && value >= 0;
+  });
+}
+
 function normalizeTeamStats(entry) {
   const team = entry?.team ?? entry?.teamInfo ?? entry?.competitor ?? entry;
   const stats = Array.isArray(entry?.stats) ? entry.stats : [];
   const stat = (name) => stats.find(item => item?.name === name || item?.abbreviation === name)?.value;
   const games = number(entry?.played ?? entry?.games ?? stat('gamesPlayed') ?? stat('GP'), 0);
-  const goalsFor = number(entry?.pointsFor ?? entry?.goalsFor ?? stat('goalsFor') ?? stat('GF'), 0);
-  const goalsAgainst = number(entry?.pointsAgainst ?? entry?.goalsAgainst ?? stat('goalsAgainst') ?? stat('GA'), 0);
+  const goalsFor = number(
+    entry?.pointsFor ?? entry?.goalsFor ?? stat('pointsFor') ?? stat('goalsFor') ?? stat('PF') ?? stat('GF'),
+    0,
+  );
+  const goalsAgainst = number(
+    entry?.pointsAgainst ?? entry?.goalsAgainst ?? stat('pointsAgainst') ?? stat('goalsAgainst') ?? stat('PA') ?? stat('GA'),
+    0,
+  );
   const id = team?.id ?? entry?.team?.id;
   const name = team?.displayName ?? team?.name ?? entry?.team?.displayName;
-  if (!id || !name || games < MIN_GAMES) return null;
-  return { id: String(id), name, games, goalsFor, goalsAgainst };
+  const normalized = { id: id ? String(id) : null, name, games, goalsFor, goalsAgainst };
+  if (!normalized.id || !normalized.name || !validTeamStats(normalized)) return null;
+  return normalized;
 }
 
 export function standingsToTeamMap(standingsResponse) {
@@ -30,7 +45,7 @@ export function standingsToTeamMap(standingsResponse) {
 }
 
 export function estimateExpectedGoals(homeTeam, awayTeam, leagueGoals = DEFAULT_LEAGUE_GOALS) {
-  if (!homeTeam || !awayTeam) return null;
+  if (!validTeamStats(homeTeam) || !validTeamStats(awayTeam)) return null;
   const leagueAverage = Math.max(0.8, number(leagueGoals, DEFAULT_LEAGUE_GOALS) / 2);
   const homeAttack = Math.max(0.25, (homeTeam.goalsFor / homeTeam.games) / leagueAverage);
   const awayDefense = Math.max(0.25, (awayTeam.goalsAgainst / awayTeam.games) / leagueAverage);
