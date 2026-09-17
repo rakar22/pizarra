@@ -1,6 +1,13 @@
 const cache = new Map<string, { at: number; data: unknown }>();
 
 const UA = "Pizarra/1.0 (football analysis)";
+const FETCH_TIMEOUT_MS = 10_000;
+
+function requestSignal(signal?: AbortSignal): AbortSignal {
+  const timeout = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+  if (!signal) return timeout;
+  return AbortSignal.any([signal, timeout]);
+}
 
 export async function cachedJson<T>(url: string, ttlMs = 180_000, init?: RequestInit): Promise<T> {
   const hit = cache.get(url);
@@ -11,6 +18,7 @@ export async function cachedJson<T>(url: string, ttlMs = 180_000, init?: Request
       if (attempt > 0) await new Promise((r) => setTimeout(r, 250 * attempt));
       const res = await fetch(url, {
         ...init,
+        signal: requestSignal(init?.signal),
         headers: {
           Accept: "application/json,text/plain,*/*",
           "User-Agent": UA,
@@ -44,6 +52,7 @@ export async function cachedTextSoft(url: string, ttlMs = 180_000): Promise<stri
   if (hit && Date.now() - hit.at < ttlMs) return hit.data as string;
   try {
     const res = await fetch(url, {
+      signal: requestSignal(),
       headers: {
         Accept: "text/csv,text/plain,*/*",
         "User-Agent": UA,
