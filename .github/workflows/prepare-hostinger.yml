@@ -1,0 +1,52 @@
+name: Prepare Pizarra for Hostinger
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/league-navigation-audit]
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        env:
+          NITRO_PRESET: node-server
+        run: npm run build
+
+      - name: Verify Hostinger server output
+        run: |
+          test -d .output
+          test -f .output/server/index.mjs
+          test -d .output/public
+          echo "Hostinger package validated: .output/server/index.mjs + .output/public"
+
+      - name: Verify secrets are not committed
+        run: |
+          if grep -RInE '(HOSTINGER_API_TOKEN|HOSTINGER_API_KEY|API_KEY=|SECRET_KEY=)' --exclude-dir=.git --exclude='*.lock' .; then
+            echo "Potential secret found in repository files."
+            exit 1
+          fi
+          echo "No deployment secrets detected in tracked source files."
