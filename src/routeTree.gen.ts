@@ -14,6 +14,7 @@ import { Route as AnalistaRouteImport } from './routes/analista'
 import { Route as CarteraRouteImport } from './routes/cartera'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as ValorRouteImport } from './routes/valor'
+import { Route as LigasIndexRouteImport } from './routes/ligas.index'
 import { Route as LigasSlugRouteImport } from './routes/ligas.$slug'
 import { Route as PartidoIdRouteImport } from './routes/partido.$id'
 
@@ -42,6 +43,11 @@ const ValorRoute = ValorRouteImport.update({
   path: '/valor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LigasIndexRoute = LigasIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LigasRoute,
+} as any)
 const LigasSlugRoute = LigasSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -61,15 +67,16 @@ export interface FileRoutesByFullPath {
   '/valor': typeof ValorRoute
   '/ligas/$slug': typeof LigasSlugRoute
   '/partido/$id': typeof PartidoIdRoute
+  '/ligas/': typeof LigasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analista': typeof AnalistaRoute
   '/cartera': typeof CarteraRoute
-  '/ligas': typeof LigasRouteWithChildren
   '/valor': typeof ValorRoute
   '/ligas/$slug': typeof LigasSlugRoute
   '/partido/$id': typeof PartidoIdRoute
+  '/ligas': typeof LigasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +87,7 @@ export interface FileRoutesById {
   '/valor': typeof ValorRoute
   '/ligas/$slug': typeof LigasSlugRoute
   '/partido/$id': typeof PartidoIdRoute
+  '/ligas/': typeof LigasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,15 +99,16 @@ export interface FileRouteTypes {
     | '/valor'
     | '/ligas/$slug'
     | '/partido/$id'
+    | '/ligas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/analista'
     | '/cartera'
-    | '/ligas'
     | '/valor'
     | '/ligas/$slug'
     | '/partido/$id'
+    | '/ligas'
   id:
     | '__root__'
     | '/'
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/valor'
     | '/ligas/$slug'
     | '/partido/$id'
+    | '/ligas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,6 +167,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ValorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ligas/': {
+      id: '/ligas/'
+      path: '/'
+      fullPath: '/ligas/'
+      preLoaderRoute: typeof LigasIndexRouteImport
+      parentRoute: typeof LigasRoute
+    }
     '/ligas/$slug': {
       id: '/ligas/$slug'
       path: '/$slug'
@@ -176,10 +193,12 @@ declare module '@tanstack/react-router' {
 
 interface LigasRouteChildren {
   LigasSlugRoute: typeof LigasSlugRoute
+  LigasIndexRoute: typeof LigasIndexRoute
 }
 
 const LigasRouteChildren: LigasRouteChildren = {
   LigasSlugRoute: LigasSlugRoute,
+  LigasIndexRoute: LigasIndexRoute,
 }
 
 const LigasRouteWithChildren = LigasRoute._addFileChildren(LigasRouteChildren)
