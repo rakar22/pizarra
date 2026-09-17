@@ -31,7 +31,7 @@ test('over/under 2.5 probabilities sum to one', () => {
 
 test('implied probability and edge are consistent', () => {
   assert.equal(impliedProbability(2), 0.5);
-  assert.equal(edge(0.6, 2), 0.1);
+  assert.ok(Math.abs(edge(0.6, 2) - 0.1) < 1e-12);
   assert.equal(impliedProbability(1), null);
   assert.equal(edge(Number.NaN, 2), null);
 });
