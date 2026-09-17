@@ -14,7 +14,7 @@ test('odds market is normalized and invalid prices are ignored', () => {
 test('value analysis calculates implied probability, edge, EV and quarter Kelly', () => {
   const result = analyseValue(0.6, 2, null, 1);
   assert.equal(result.impliedProbability, 0.5);
-  assert.equal(result.edge, 0.1);
+  assert.ok(Math.abs(result.edge - 0.1) < 1e-12);
   assert.equal(result.expectedValue, 0.19999999999999996);
   assert.ok(result.quarterKelly > 0);
   assert.equal(result.hasValue, true);
