@@ -1,0 +1,22 @@
+{
+  "name": "pizarra",
+  "version": "1.2.3",
+  "private": true,
+  "type": "module",
+  "description": "Pizarra - football analytics and value research dashboard",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "node --test src/core/*.test.js",
+    "preview": "vite preview",
+    "start": "vite preview"
+  },
+  "dependencies": {
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "lucide-react": "latest",
+    "@vitejs/plugin-react": "latest"
+  },
+  "devDependencies": {}
+}
