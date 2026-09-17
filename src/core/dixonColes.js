@@ -16,6 +16,13 @@ function validateRho(value) {
   return rho;
 }
 
+function validateMaxGoals(value) {
+  if (!Number.isInteger(value) || value < 1 || value > 30) {
+    throw new RangeError('maxGoals must be an integer from 1 to 30');
+  }
+  return value;
+}
+
 export function dixonColesTau(homeGoals, awayGoals, homeLambda, awayLambda, rho = DEFAULT_RHO) {
   const h = Number(homeGoals);
   const a = Number(awayGoals);
@@ -40,35 +47,45 @@ export function dixonColesScoreProbability(homeGoals, awayGoals, homeLambda, awa
     * dixonColesTau(h, a, homeLambda, awayLambda, rho);
 }
 
-export function dixonColesMatchProbabilities(homeLambda, awayLambda, rho = DEFAULT_RHO, maxGoals = 12) {
+export function dixonColesScoreMatrix(homeLambda, awayLambda, rho = DEFAULT_RHO, maxGoals = 12) {
   const home = rate(homeLambda, 'homeLambda');
   const away = rate(awayLambda, 'awayLambda');
   const r = validateRho(rho);
-  if (!Number.isInteger(maxGoals) || maxGoals < 1 || maxGoals > 30) throw new RangeError('maxGoals must be an integer from 1 to 30');
+  const max = validateMaxGoals(maxGoals);
+  const matrix = [];
+  let total = 0;
 
+  for (let h = 0; h <= max; h += 1) {
+    for (let a = 0; a <= max; a += 1) {
+      const probability = dixonColesScoreProbability(h, a, home, away, r);
+      matrix.push({ homeGoals: h, awayGoals: a, probability });
+      total += probability;
+    }
+  }
+
+  return { matrix, total };
+}
+
+export function dixonColesMatchProbabilities(homeLambda, awayLambda, rho = DEFAULT_RHO, maxGoals = 12) {
+  const { matrix, total } = dixonColesScoreMatrix(homeLambda, awayLambda, rho, maxGoals);
   let homeWin = 0;
   let draw = 0;
   let awayWin = 0;
-  for (let h = 0; h <= maxGoals; h += 1) {
-    for (let a = 0; a <= maxGoals; a += 1) {
-      const probability = dixonColesScoreProbability(h, a, home, away, r);
-      if (h > a) homeWin += probability;
-      else if (h === a) draw += probability;
-      else awayWin += probability;
-    }
+
+  for (const { homeGoals, awayGoals, probability } of matrix) {
+    if (homeGoals > awayGoals) homeWin += probability;
+    else if (homeGoals === awayGoals) draw += probability;
+    else awayWin += probability;
   }
-  const total = homeWin + draw + awayWin;
+
   return { home: homeWin / total, draw: draw / total, away: awayWin / total };
 }
 
 export function dixonColesOverUnder25(homeLambda, awayLambda, rho = DEFAULT_RHO, maxGoals = 12) {
-  const probabilities = dixonColesMatchProbabilities(homeLambda, awayLambda, rho, maxGoals);
-  let under = 0;
-  for (let h = 0; h <= maxGoals; h += 1) {
-    for (let a = 0; a <= maxGoals; a += 1) {
-      if (h + a <= 2) under += dixonColesScoreProbability(h, a, homeLambda, awayLambda, rho);
-    }
-  }
-  const total = 1;
-  return { over: 1 - under, under, oneX2: probabilities };
+  const { matrix, total } = dixonColesScoreMatrix(homeLambda, awayLambda, rho, maxGoals);
+  const underMass = matrix
+    .filter(({ homeGoals, awayGoals }) => homeGoals + awayGoals <= 2)
+    .reduce((sum, row) => sum + row.probability, 0);
+  const under = underMass / total;
+  return { over: 1 - under, under, oneX2: dixonColesMatchProbabilities(homeLambda, awayLambda, rho, maxGoals) };
 }
