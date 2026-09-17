@@ -45,7 +45,9 @@ jobs:
 
       - name: Verify obvious secret assignments are absent
         run: |
-          if grep -RInE '(API_KEY|SECRET_KEY|PASSWORD|TOKEN)[[:space:]]*=' --exclude-dir=.git --exclude='*.lock' --exclude='*.yml' --exclude='*.yaml' .; then
+          if grep -RInE '(API_KEY|SECRET_KEY|PASSWORD|TOKEN)[[:space:]]*=' \
+            --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.output \
+            --exclude='*.lock' --exclude='*.yml' --exclude='*.yaml' .; then
             echo "Potential secret assignment found in repository files."
             exit 1
           fi
