@@ -2,7 +2,7 @@
 
 **Football Intelligence Dashboard** — una plataforma de análisis futbolístico que combina datos, cuotas y modelos probabilísticos de forma trazable.
 
-## Estado actual — V1 operativa
+## Estado actual — V2 en construcción
 
 - Dashboard oscuro, responsive y orientado a analista.
 - Navegación preparada para Dashboard, Partidos, Value, Modelo, Scout IA, Bankroll y Datos.
@@ -16,10 +16,13 @@
 - Registro multi-fuente con ESPN, OpenLigaDB y TheSportsDB.
 - Adaptador de cuotas normalizado preparado para integración server-side sin exponer credenciales.
 - Backtesting rolling cronológico sin fuga del resultado del partido al momento de predecir.
+- Backtesting Poisson y Dixon-Coles sobre el mismo flujo histórico, con comparación estrictamente descriptiva.
 - Brier Score, Log Loss, bins de calibración, ECE y MCE como métricas descriptivas.
+- Umbral explícito de 100 predicciones para considerar la calibración como muestra suficiente; por debajo se marca `insufficient_sample`.
+- Auditoría de datasets históricos: duplicados, IDs, resultados, fechas, orden cronológico y rango temporal.
 - Comparación Poisson vs Dixon-Coles sin declarar un modelo ganador antes de la validación out-of-sample.
 - Búsqueda, actualización manual, estados de carga/error y panel de fuentes.
-- Tests unitarios del núcleo matemático, backtesting, calibración y Value Engine, además de CI para test + build.
+- Tests unitarios del núcleo matemático, backtesting, calibración, calidad de datos y Value Engine, además de CI para test + build.
 - Sin claves API hardcodeadas ni ejecución automática de apuestas.
 
 ## Configuración
@@ -42,13 +45,15 @@ UI React
   ↓
 Data Registry → ESPN / OpenLigaDB / TheSportsDB / Odds providers
   ↓
-Normalization layer
+Normalization layer → dataset quality audit
   ↓
 Team stats → Poisson / Dixon-Coles → probabilities
   ↓
 Odds normalization → de-vig → Value Engine → quality gates
   ↓
-Historical events → rolling backtest → calibration (Brier / Log Loss / ECE / MCE)
+Historical events → chronological rolling backtests
+  ↓
+Brier / Log Loss / ECE / MCE → calibration status
   ↓
 Scout IA evidence layer → Bankroll analytics
 ```
@@ -68,7 +73,7 @@ GitHub Actions ejecuta automáticamente `npm test` y `npm run build` en pushes y
 
 1. Completar contratos y normalización entre proveedores reales.
 2. Integrar un proveedor de cuotas real mediante un backend/serverless y secretos de despliegue.
-3. Ingesta histórica persistente para activar backtesting y calibración con muestras suficientes.
+3. Ingesta histórica persistente para alimentar el backtesting con partidos reales y alcanzar una muestra suficiente.
 4. Estimar parámetros Dixon-Coles a partir del histórico en lugar de depender de `rho` por defecto.
 5. Añadir modelos ML como ensemble únicamente después de comparar de forma reproducible y out-of-sample.
 6. Scout IA con evidencia, timestamps y fuentes asociadas a cada afirmación.
