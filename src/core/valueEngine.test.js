@@ -20,6 +20,12 @@ test('value analysis calculates implied probability, edge, EV and quarter Kelly'
   assert.equal(result.hasValue, true);
 });
 
+test('de-vig probability is tied to the selected market outcome', () => {
+  const result = analyseValue(0.45, 2.3, { home: 2.3, draw: 3.2, away: 3.6 }, 1, 'home');
+  assert.ok(result.deVigProbability > 0 && result.deVigProbability < 1);
+  assert.equal(result.selection, 'home');
+});
+
 test('value gate requires data quality', () => {
   const analysis = analyseValue(0.6, 2, null, 0.5);
   assert.equal(valueGate(analysis).eligible, false);
