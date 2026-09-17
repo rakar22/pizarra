@@ -18,3 +18,4 @@ jobs:
       - run: npm run test:football
       - run: npm run lint
       - run: npm run build
+      # Production validation is intentionally performed with the same Node 22 toolchain.
