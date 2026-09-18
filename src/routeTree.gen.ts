@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalistaRouteImport } from './routes/analista'
+import { Route as ApuestaRouteImport } from './routes/apuesta'
 import { Route as CarteraRouteImport } from './routes/cartera'
 import { Route as LigasRouteImport } from './routes/ligas'
 import { Route as ValorRouteImport } from './routes/valor'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const AnalistaRoute = AnalistaRouteImport.update({
   id: '/analista',
   path: '/analista',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApuestaRoute = ApuestaRouteImport.update({
+  id: '/apuesta',
+  path: '/apuesta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CarteraRoute = CarteraRouteImport.update({
@@ -62,6 +68,7 @@ const PartidoIdRoute = PartidoIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analista': typeof AnalistaRoute
+  '/apuesta': typeof ApuestaRoute
   '/cartera': typeof CarteraRoute
   '/ligas': typeof LigasRouteWithChildren
   '/valor': typeof ValorRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analista': typeof AnalistaRoute
+  '/apuesta': typeof ApuestaRoute
   '/cartera': typeof CarteraRoute
   '/valor': typeof ValorRoute
   '/ligas/$slug': typeof LigasSlugRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/analista': typeof AnalistaRoute
+  '/apuesta': typeof ApuestaRoute
   '/cartera': typeof CarteraRoute
   '/ligas': typeof LigasRouteWithChildren
   '/valor': typeof ValorRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/analista'
+    | '/apuesta'
     | '/cartera'
     | '/ligas'
     | '/valor'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/analista'
+    | '/apuesta'
     | '/cartera'
     | '/valor'
     | '/ligas/$slug'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/analista'
+    | '/apuesta'
     | '/cartera'
     | '/ligas'
     | '/valor'
@@ -124,6 +136,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalistaRoute: typeof AnalistaRoute
+  ApuestaRoute: typeof ApuestaRoute
   CarteraRoute: typeof CarteraRoute
   LigasRoute: typeof LigasRouteWithChildren
   ValorRoute: typeof ValorRoute
@@ -144,6 +157,13 @@ declare module '@tanstack/react-router' {
       path: '/analista'
       fullPath: '/analista'
       preLoaderRoute: typeof AnalistaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/apuesta': {
+      id: '/apuesta'
+      path: '/apuesta'
+      fullPath: '/apuesta'
+      preLoaderRoute: typeof ApuestaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cartera': {
@@ -206,6 +226,7 @@ const LigasRouteWithChildren = LigasRoute._addFileChildren(LigasRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalistaRoute: AnalistaRoute,
+  ApuestaRoute: ApuestaRoute,
   CarteraRoute: CarteraRoute,
   LigasRoute: LigasRouteWithChildren,
   ValorRoute: ValorRoute,

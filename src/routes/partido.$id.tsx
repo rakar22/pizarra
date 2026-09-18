@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Star } from "lucide-react";
 import { getBriefing, getMatch } from "@/lib/football/server";
 import { kellyFraction } from "@/lib/football/model";
+import { suggestReliableSelections } from "@/lib/football/builder";
 import { cn, formatFullDate, oddsFmt, pct } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,11 @@ import { FormPills } from "@/components/form-pills";
 import { MatchIntelPanel } from "@/components/match-intel";
 import { ProbBar } from "@/components/prob-bar";
 import { ResearchDesk } from "@/components/research-desk";
+import { BuilderLegEditor } from "@/components/builder-leg-editor";
 import { ScoutDesk } from "@/components/scout-desk";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TeamMark } from "@/components/team-mark";
-import { useBankroll, useWatchlist } from "@/lib/store";
+import { useBankroll, useBuilderCoupon, useWatchlist } from "@/lib/store";
 import type { Match, MatchIntel, MatchResearch, StandingRow, ValuePick } from "@/lib/football/types";
 
 export const Route = createFileRoute("/partido/$id")({
@@ -78,6 +80,7 @@ function MatchView({
 }) {
   const watch = useWatchlist();
   const bank = useBankroll();
+  const coupon = useBuilderCoupon();
   const saved = watch.ids.includes(match.id);
   const brief = useMutation({
     mutationFn: () => getBriefing({ data: { matchId: match.id } }),
@@ -176,6 +179,42 @@ function MatchView({
       )}
 
       {research && <ResearchDesk match={match} research={research} />}
+
+      <section className="mt-6">
+        <div className="mb-2 flex items-end justify-between px-1">
+          <div>
+            <p className="text-[13px] font-medium text-muted">Crear Apuesta</p>
+            <h2 className="text-[22px] font-bold tracking-tight">Pierna del builder</h2>
+          </div>
+          <Link to="/apuesta" className="text-[15px] font-semibold text-accent">
+            Ver cupón
+          </Link>
+        </div>
+        <p className="mb-3 px-1 text-[13px] leading-snug text-muted">
+          Stack blando por defecto (O1.5, córner/tarjeta con alta probabilidad del modelo). Revisa el cupón
+          entero antes de apostar.
+        </p>
+        <BuilderLegEditor
+          match={match}
+          research={research}
+          selected={coupon.legs.find((l) => l.match.id === match.id)?.selections ?? []}
+          onChange={(next) => {
+            if (!next.length) coupon.removeLeg(match.id);
+            else coupon.upsertLeg(match, next);
+          }}
+        />
+        <Button
+          type="button"
+          size="sm"
+          className="mt-3"
+          variant="secondary"
+          onClick={() =>
+            coupon.upsertLeg(match, suggestReliableSelections(match, research ?? undefined))
+          }
+        >
+          Aplicar stack más fiable
+        </Button>
+      </section>
 
       <section className="mt-6">
         <div className="mb-2 flex items-center justify-between px-1">

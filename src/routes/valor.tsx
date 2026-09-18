@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { getBoard } from "@/lib/football/server";
 import { MatchCard } from "@/components/match-card";
@@ -29,7 +29,12 @@ function ValorPage() {
   return (
     <main>
       <PageHeader title="Valor">
-        Donde el modelo supera la implícita. Umbral +3,5. Cola de trabajo, no lock.
+        Donde el modelo supera la implícita. Umbral +3,5. Cola de trabajo, no lock. Para stacks Crear
+        Apuesta usa{" "}
+        <Link to="/apuesta" className="font-semibold text-accent">
+          fiabilidad
+        </Link>
+        , no este ranking.
       </PageHeader>
 
       {isLoading && (

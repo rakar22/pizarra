@@ -20,7 +20,10 @@ function CarteraPage() {
   return (
     <main>
       <PageHeader title="Cartera">
-        Bankroll en este dispositivo. Kelly a un cuarto.
+        Bankroll en este dispositivo. Kelly a un cuarto.{" "}
+        <Link to="/apuesta" className="font-semibold text-accent">
+          Revisar un Crear Apuesta
+        </Link>
       </PageHeader>
 
       <section className="grid grid-cols-2 gap-3">

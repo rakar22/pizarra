@@ -1,6 +1,6 @@
-import { fairOdds } from "./odds";
-import { poissonAtLeast, poissonOver, poissonPmf } from "./poisson";
-import type { Match, MatchResearch, ResearchLine } from "./types";
+import { fairOdds } from "./odds.ts";
+import { poissonAtLeast, poissonOver, poissonPmf } from "./poisson.ts";
+import type { Match, MatchResearch, ResearchLine } from "./types.ts";
 
 const CORNER_PRIORS: Record<string, number> = {
   "eng.1": 10.6,
@@ -74,20 +74,31 @@ function doublePoisson1x2(lamH: number, lamA: number, cap = 16) {
   return { home: cH, draw: cD, away: cA };
 }
 
-export function buildMatchResearch(match: Match): MatchResearch {
+/** League priors scaled by expected goals — shared with Crear Apuesta scoring. */
+export function matchSetPieces(match: Match) {
   const m = match.model;
-  const book = match.odds;
   const goalScale = (m.lambdaHome + m.lambdaAway) / 2.7;
   const cornerTot = (CORNER_PRIORS[match.leagueSlug] ?? 10) * Math.min(1.25, Math.max(0.8, goalScale));
   const homeShare = Math.min(0.62, Math.max(0.46, 0.54 + 0.05 * (m.lambdaHome - m.lambdaAway)));
   const lambdaCornersHome = Math.round(cornerTot * homeShare * 100) / 100;
   const lambdaCornersAway = Math.round(cornerTot * (1 - homeShare) * 100) / 100;
-
   const cardTot = CARD_PRIORS[match.leagueSlug] ?? 4.2;
   const lambdaCardsHome = Math.round(cardTot * 0.46 * 100) / 100;
   const lambdaCardsAway = Math.round(cardTot * 0.54 * 100) / 100;
-  const bothCards = poissonAtLeast(1, lambdaCardsHome) * poissonAtLeast(1, lambdaCardsAway);
-  const corners = doublePoisson1x2(lambdaCornersHome, lambdaCornersAway);
+  return {
+    cornerTot,
+    cardTot,
+    lambdaCorners: { home: lambdaCornersHome, away: lambdaCornersAway },
+    lambdaCards: { home: lambdaCardsHome, away: lambdaCardsAway },
+    bothCards: poissonAtLeast(1, lambdaCardsHome) * poissonAtLeast(1, lambdaCardsAway),
+  };
+}
+
+export function buildMatchResearch(match: Match): MatchResearch {
+  const m = match.model;
+  const book = match.odds;
+  const { cornerTot, cardTot, lambdaCorners, lambdaCards, bothCards } = matchSetPieces(match);
+  const corners = doublePoisson1x2(lambdaCorners.home, lambdaCorners.away);
 
   const src = book?.source;
 
@@ -149,8 +160,8 @@ export function buildMatchResearch(match: Match): MatchResearch {
   return {
     lines,
     players: [],
-    lambdaCorners: { home: lambdaCornersHome, away: lambdaCornersAway },
-    lambdaCards: { home: lambdaCardsHome, away: lambdaCardsAway },
+    lambdaCorners,
+    lambdaCards,
     sources: [
       "Modelo Poisson (goles, córners, tarjetas)",
       book ? `Libro ${book.source}` : "Sin libro en vivo",

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ValuePick } from "./football/types";
+import type { BuilderSelectionInput, ReliabilityProfile } from "./football/builder";
+import type { Match, ValuePick } from "./football/types";
 
 export type BetRecord = {
   id: string;
@@ -81,3 +82,50 @@ export const useBankroll = create<BankState>()(
 export function pickLabel(p: ValuePick) {
   return `${p.market} · ${p.label}`;
 }
+
+export type DraftBuilderLeg = {
+  match: Match;
+  selections: BuilderSelectionInput[];
+};
+
+type BuilderState = {
+  legs: DraftBuilderLeg[];
+  profile: ReliabilityProfile;
+  couponOdds: string;
+  setProfile: (profile: ReliabilityProfile) => void;
+  setCouponOdds: (couponOdds: string) => void;
+  upsertLeg: (match: Match, selections: BuilderSelectionInput[]) => void;
+  setLegSelections: (matchId: string, selections: BuilderSelectionInput[]) => void;
+  removeLeg: (matchId: string) => void;
+  replaceLegs: (legs: DraftBuilderLeg[]) => void;
+  clear: () => void;
+};
+
+export const useBuilderCoupon = create<BuilderState>()(
+  persist(
+    (set) => ({
+      legs: [],
+      profile: "equilibrado",
+      couponOdds: "",
+      setProfile: (profile) => set({ profile }),
+      setCouponOdds: (couponOdds) => set({ couponOdds }),
+      upsertLeg: (match, selections) =>
+        set((s) => {
+          const next = { match, selections };
+          const idx = s.legs.findIndex((l) => l.match.id === match.id);
+          if (idx < 0) return { legs: [...s.legs, next].slice(0, 12) };
+          const legs = s.legs.slice();
+          legs[idx] = next;
+          return { legs };
+        }),
+      setLegSelections: (matchId, selections) =>
+        set((s) => ({
+          legs: s.legs.map((l) => (l.match.id === matchId ? { ...l, selections } : l)),
+        })),
+      removeLeg: (matchId) => set((s) => ({ legs: s.legs.filter((l) => l.match.id !== matchId) })),
+      replaceLegs: (legs) => set({ legs: legs.slice(0, 12) }),
+      clear: () => set({ legs: [], couponOdds: "" }),
+    }),
+    { name: "pizarra-builder" },
+  ),
+);

@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { Match, MatchResearch, ResearchGroup, ResearchLine } from "@/lib/football/types";
+import { selectionFromResearchLine, selectionKey } from "@/lib/football/builder";
 import { kellyFraction } from "@/lib/football/model";
 import { cn, oddsFmt, pct } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { useBankroll } from "@/lib/store";
+import { useBankroll, useBuilderCoupon } from "@/lib/store";
 
 const GROUPS: { id: ResearchGroup; label: string }[] = [
   { id: "1x2", label: "1X2" },
@@ -20,6 +22,8 @@ export function ResearchDesk({ match, research }: { match: Match; research: Matc
   const rows = research.lines.filter((l) => l.group === group);
   const hasBet365 =
     research.lines.some((l) => l.marketSource === "Bet365") || match.odds?.source === "Bet365";
+  const coupon = useBuilderCoupon();
+  const inCoupon = coupon.legs.some((l) => l.match.id === match.id);
 
   return (
     <section className="mt-6">
@@ -30,6 +34,12 @@ export function ResearchDesk({ match, research }: { match: Match; research: Matc
         </div>
         {hasBet365 ? <Badge variant="accent">Bet365</Badge> : <Badge variant="outline">Tipo casa</Badge>}
       </div>
+      <p className="mb-3 px-1 text-[13px] leading-snug text-muted">
+        {inCoupon ? "Este partido ya está en el cupón. " : ""}
+        <Link to="/apuesta" className="font-semibold text-accent">
+          Crear Apuesta · fiabilidad
+        </Link>
+      </p>
 
       <div className="ios-hide-scroll -mx-4 overflow-x-auto px-4">
         <div className="flex w-max flex-nowrap rounded-[9px] bg-elevated p-[2px]">
@@ -81,11 +91,22 @@ export function ResearchDesk({ match, research }: { match: Match; research: Matc
 
 function ResearchRow({ line, match }: { line: ResearchLine; match: Match }) {
   const bank = useBankroll();
+  const coupon = useBuilderCoupon();
+  const mapped = selectionFromResearchLine(line);
   const price = line.marketOdds ?? line.houseOdds;
   const edge =
     line.marketOdds && line.marketOdds > 1 ? line.modelProb - 1 / line.marketOdds : undefined;
   const kelly = price > 1 ? kellyFraction(line.modelProb, price) : 0;
   const stake = Math.max(bank.unit, Math.round(bank.bankroll * kelly) || bank.unit);
+
+  const addToBuilder = () => {
+    if (!mapped) return;
+    const existing = coupon.legs.find((l) => l.match.id === match.id);
+    const prev = existing?.selections ?? [];
+    const key = selectionKey(mapped);
+    const already = prev.some((s) => selectionKey(s) === key);
+    coupon.upsertLeg(match, already ? prev : [...prev, mapped]);
+  };
 
   return (
     <li className="px-4 py-3">
@@ -106,6 +127,11 @@ function ResearchRow({ line, match }: { line: ResearchLine; match: Match }) {
         <span>{line.marketOdds ? line.marketSource ?? "casa" : "tipo casa"}</span>
         {edge != null && edge >= 0.035 && <Badge variant="value">{pct(edge, 1)}</Badge>}
       </div>
+      {mapped && (
+        <button type="button" className="mt-1 min-h-11 text-[15px] font-semibold text-accent" onClick={addToBuilder}>
+          Añadir al builder
+        </button>
+      )}
       {kelly > 0 && (
         <button
           type="button"
