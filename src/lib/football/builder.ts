@@ -762,6 +762,17 @@ export function scoreBuilderCoupon(
   };
 }
 
+function selectionPassesThreshold(
+  match: Match,
+  sel: BuilderSelectionInput,
+  thresholds: BuilderThresholds,
+  research?: MatchResearch,
+): boolean {
+  const raw = rawSelectionProb(match, sel, research);
+  const cons = conservativeFromRaw(raw, sel, leagueCoverage(match.leagueSlug));
+  return cons.p >= thresholds.minSelectionProb;
+}
+
 export function suggestReliableSelections(
   match: Match,
   research?: MatchResearch,
@@ -771,32 +782,36 @@ export function suggestReliableSelections(
   const out: BuilderSelectionInput[] = [];
   const o15 = match.model.over15;
   const o25 = match.model.over25;
-  if (o25 >= t.over25Strong && o15 >= 0.8) {
-    out.push({ kind: "goals_over", line: 2.5, label: "Más de 2.5 goles" });
-  } else {
-    out.push({ kind: "goals_over", line: 1.5, label: "Más de 1.5 goles" });
+  const goalOver25: BuilderSelectionInput = { kind: "goals_over", line: 2.5, label: "Más de 2.5 goles" };
+  const goalOver15: BuilderSelectionInput = { kind: "goals_over", line: 1.5, label: "Más de 1.5 goles" };
+  if (o25 >= t.over25Strong && o15 >= 0.8 && selectionPassesThreshold(match, goalOver25, t, research)) {
+    out.push(goalOver25);
+  } else if (selectionPassesThreshold(match, goalOver15, t, research)) {
+    out.push(goalOver15);
   }
 
-  const set = matchSetPieces(match);
-  const cornerOverLines = [8.5, 9.5, 10.5];
-  const cornerHit = cornerOverLines.find((line) => poissonOver(line, set.cornerTot) >= t.minSoftLine);
-  if (cornerHit != null) {
-    out.push({ kind: "corners_over", line: cornerHit, label: `Más de ${cornerHit} córners` });
-  } else if (1 - poissonOver(10.5, set.cornerTot) >= t.minSoftLine) {
-    out.push({ kind: "corners_under", line: 10.5, label: "Menos de 10.5 córners" });
-  }
+  const cornerCandidates: BuilderSelectionInput[] = [
+    ...[8.5, 9.5, 10.5].map((line) => ({
+      kind: "corners_over" as const,
+      line,
+      label: `Más de ${line} córners`,
+    })),
+    { kind: "corners_under", line: 10.5, label: "Menos de 10.5 córners" },
+  ];
+  const corner = cornerCandidates.find((sel) => selectionPassesThreshold(match, sel, t, research));
+  if (corner) out.push(corner);
 
-  const cardOverLines = [3.5, 4.5];
-  const cardHit = cardOverLines.find((line) => poissonOver(line, set.cardTot) >= t.minSoftLine);
-  if (cardHit != null) {
-    out.push({ kind: "cards_over", line: cardHit, label: `Más de ${cardHit} tarjetas` });
-  } else if (set.bothCards >= t.minSoftLine) {
-    out.push({ kind: "both_teams_carded", label: "Ambos equipos reciben tarjeta" });
-  }
+  const cardCandidates: BuilderSelectionInput[] = [
+    ...[3.5, 4.5].map((line) => ({
+      kind: "cards_over" as const,
+      line,
+      label: `Más de ${line} tarjetas`,
+    })),
+    { kind: "both_teams_carded", label: "Ambos equipos reciben tarjeta" },
+  ];
+  const card = cardCandidates.find((sel) => selectionPassesThreshold(match, sel, t, research));
+  if (card) out.push(card);
 
-  if (research?.lines.some((l) => l.group === "jugador")) {
-    // Never auto-include player props: they are the usual reliability leak.
-  }
   return out;
 }
 

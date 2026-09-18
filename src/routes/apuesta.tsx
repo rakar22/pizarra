@@ -11,6 +11,7 @@ import {
   type ReliabilityProfile,
 } from "@/lib/football/builder";
 import { parseCouponText } from "@/lib/football/builder-parse";
+import { LEAGUES } from "@/lib/football/leagues";
 import type { Match } from "@/lib/football/types";
 import { useBankroll, useBuilderCoupon } from "@/lib/store";
 import { cn, formatKickoff, pct } from "@/lib/utils";
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/apuesta")({
   loader: () => getBoard(),
   component: ApuestaPage,
 });
+
+const TRACKED = new Set(LEAGUES.map((l) => l.slug));
 
 const PROFILES: { id: ReliabilityProfile; label: string }[] = [
   { id: "estricto", label: "Estricto" },
@@ -49,6 +52,7 @@ function ApuestaPage() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [help, setHelp] = useState(false);
+  const [allLeagues, setAllLeagues] = useState(false);
 
   const boardById = useMemo(() => new Map(matches.map((m) => [m.id, m])), [matches]);
   const hydrated = useMemo(
@@ -76,12 +80,13 @@ function ApuestaPage() {
     const q = query.trim().toLowerCase();
     return matches
       .filter((m) => m.status === "pre")
+      .filter((m) => allLeagues || TRACKED.has(m.leagueSlug))
       .filter((m) => {
         if (!q) return true;
         return `${m.home.name} ${m.away.name} ${m.league}`.toLowerCase().includes(q);
       })
       .slice(0, 24);
-  }, [matches, query]);
+  }, [matches, query, allLeagues]);
 
   const applyPaste = () => {
     const parsed = parseCouponText(paste, matches);
@@ -254,12 +259,17 @@ function ApuestaPage() {
       </div>
 
       <h2 className="ios-section mt-8">Añadir desde la agenda</h2>
-      <Input
-        className="mb-3"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Buscar equipo o liga"
-      />
+      <div className="mb-3 flex gap-2">
+        <Input
+          className="flex-1"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar equipo o liga"
+        />
+        <Button type="button" variant={allLeagues ? "default" : "secondary"} size="sm" onClick={() => setAllLeagues((v) => !v)}>
+          {allLeagues ? "Ligas top" : "Más ligas"}
+        </Button>
+      </div>
       <ul className="ios-group">
         {upcoming.map((m) => (
           <AgendaAddRow

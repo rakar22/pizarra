@@ -63,8 +63,15 @@ test("O1.5 is preferred over O2.5 unless the model is strongly behind O2.5", () 
   assert.ok(match.model.over15 > match.model.over25);
   assert.ok(match.model.over25 < BUILDER_PROFILES.equilibrado.over25Strong);
   const suggested = suggestReliableSelections(match);
-  assert.equal(suggested[0]?.kind, "goals_over");
-  assert.equal(suggested[0]?.line, 1.5);
+  const goal = suggested.find((s) => s.kind === "goals_over" || s.kind === "goals_under");
+  if (goal) {
+    assert.equal(goal.kind, "goals_over");
+    assert.equal(goal.line, 1.5);
+  }
+  assert.equal(
+    suggested.some((s) => s.kind === "goals_over" && s.line === 2.5),
+    false,
+  );
 });
 
 test("nested over 1.5 + over 2.5 joint equals over 2.5", () => {
@@ -268,6 +275,26 @@ Tarjetas del partido - Más de 3.5
   assert.equal(parsed.legs[1].match?.id, "2");
   assert.equal(parsed.legs[1].selections[1].kind, "corners_over");
   assert.equal(parsed.legs[1].selections[2].kind, "cards_over");
+});
+
+test("suggested stack only keeps lines that still pass after coverage haircuts", () => {
+  const quietHome = side("Burnley", "BUR", { gf: 9, ga: 12, form: "DLDWL" });
+  const quietAway = side("Wolves", "WOL", { gf: 8, ga: 14, form: "LDLLW" });
+  const obscure = fakeMatch({
+    home: quietHome,
+    away: quietAway,
+    model: buildModel(quietHome, quietAway, 1.35),
+    leagueSlug: "fin.2",
+    league: "Ykkönen",
+  });
+  const suggested = suggestReliableSelections(obscure);
+  const leg = scoreBuilderLeg(obscure, suggested);
+  for (const s of leg.selections) {
+    assert.ok(s.conservativeProb + 1e-9 >= BUILDER_PROFILES.equilibrado.minSelectionProb);
+  }
+  const pl = fakeMatch();
+  const plStack = suggestReliableSelections(pl);
+  assert.ok(plStack.length >= 2);
 });
 
 test("estricto profile fails more legs than equilibrado on the same stack", () => {
