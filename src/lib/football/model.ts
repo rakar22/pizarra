@@ -1,5 +1,5 @@
-import type { MarketOdds, ModelMarkets, Side, ValuePick } from "./types";
-import { fairOdds, impliedProb } from "./odds";
+import type { MarketOdds, ModelMarkets, Side, ValuePick } from "./types.ts";
+import { fairOdds, impliedProb } from "./odds.ts";
 
 const FACT = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800];
 const MAX_GOALS = 8;

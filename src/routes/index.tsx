@@ -133,6 +133,10 @@ function Home() {
         <Link to="/valor" className="font-semibold text-accent">
           Ver mercados con valor
         </Link>
+        {" · "}
+        <Link to="/apuesta" className="font-semibold text-accent">
+          Crear Apuesta
+        </Link>
       </p>
     </main>
   );

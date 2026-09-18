@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Calendar, LineChart, ScanSearch, Table2, Wallet } from "lucide-react";
+import { Calendar, Layers, LineChart, ScanSearch, Table2, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Disclaimer } from "@/components/disclaimer";
 
@@ -8,6 +8,7 @@ const NAV = [
   { to: "/", label: "Agenda", icon: Calendar },
   { to: "/valor", label: "Valor", icon: LineChart },
   { to: "/ligas", label: "Ligas", icon: Table2 },
+  { to: "/apuesta", label: "Apuesta", icon: Layers },
   { to: "/analista", label: "Scout", icon: ScanSearch },
   { to: "/cartera", label: "Cartera", icon: Wallet },
 ] as const;
@@ -36,7 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   key={item.to}
                   to={item.to}
                   className={cn(
-                    "inline-flex h-9 items-center rounded-full px-3 text-[13px] font-medium transition-colors duration-150",
+                    "inline-flex h-9 items-center rounded-full px-2.5 text-[13px] font-medium transition-colors duration-150",
                     active ? "bg-fg text-bg" : "text-muted hover:text-fg",
                   )}
                 >
@@ -57,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </footer>
 
       <nav className="ios-blur fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.08] pb-[env(safe-area-inset-bottom)] md:hidden">
-        <ul className="mx-auto grid max-w-lg grid-cols-5">
+        <ul className="mx-auto grid max-w-lg grid-cols-6">
           {NAV.map((item) => {
             const Icon = item.icon;
             const active =
@@ -73,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     active ? "text-accent" : "text-faint",
                   )}
                 >
-                  <Icon className="size-[26px]" strokeWidth={active ? 2.15 : 1.6} />
+                  <Icon className="size-[22px]" strokeWidth={active ? 2.15 : 1.6} />
                   {item.label}
                 </Link>
               </li>
