@@ -277,6 +277,14 @@ Tarjetas del partido - Más de 3.5
   assert.equal(parsed.legs[1].selections[2].kind, "cards_over");
 });
 
+test("a typical PL O1.5 + soft corners/cards stack can pass the leg filter", () => {
+  const match = fakeMatch();
+  const suggested = suggestReliableSelections(match);
+  assert.ok(suggested.length >= 2);
+  const leg = scoreBuilderLeg(match, suggested);
+  assert.notEqual(leg.verdict, "fail");
+});
+
 test("suggested stack only keeps lines that still pass after coverage haircuts", () => {
   const quietHome = side("Burnley", "BUR", { gf: 9, ga: 12, form: "DLDWL" });
   const quietAway = side("Wolves", "WOL", { gf: 8, ga: 14, form: "LDLLW" });

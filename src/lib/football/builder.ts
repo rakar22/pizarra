@@ -56,32 +56,32 @@ export type BuilderThresholds = {
 export const BUILDER_PROFILES: Record<ReliabilityProfile, BuilderThresholds> = {
   estricto: {
     minSelectionProb: 0.7,
-    minLegJoint: 0.5,
+    minLegJoint: 0.36,
     maxLegsSoft: 4,
     maxLegsHard: 5,
-    minCouponSurvival: 0.15,
-    warnCouponSurvival: 0.22,
-    over25Strong: 0.64,
-    minSoftLine: 0.68,
+    minCouponSurvival: 0.12,
+    warnCouponSurvival: 0.2,
+    over25Strong: 0.72,
+    minSoftLine: 0.7,
   },
   equilibrado: {
     minSelectionProb: 0.62,
-    minLegJoint: 0.42,
+    minLegJoint: 0.28,
     maxLegsSoft: 5,
     maxLegsHard: 6,
-    minCouponSurvival: 0.1,
-    warnCouponSurvival: 0.18,
-    over25Strong: 0.62,
+    minCouponSurvival: 0.08,
+    warnCouponSurvival: 0.16,
+    over25Strong: 0.7,
     minSoftLine: 0.64,
   },
   flexible: {
     minSelectionProb: 0.55,
-    minLegJoint: 0.32,
+    minLegJoint: 0.2,
     maxLegsSoft: 6,
     maxLegsHard: 8,
-    minCouponSurvival: 0.05,
-    warnCouponSurvival: 0.1,
-    over25Strong: 0.58,
+    minCouponSurvival: 0.04,
+    warnCouponSurvival: 0.08,
+    over25Strong: 0.64,
     minSoftLine: 0.58,
   },
 };
@@ -784,7 +784,7 @@ export function suggestReliableSelections(
   const o25 = match.model.over25;
   const goalOver25: BuilderSelectionInput = { kind: "goals_over", line: 2.5, label: "Más de 2.5 goles" };
   const goalOver15: BuilderSelectionInput = { kind: "goals_over", line: 1.5, label: "Más de 1.5 goles" };
-  if (o25 >= t.over25Strong && o15 >= 0.8 && selectionPassesThreshold(match, goalOver25, t, research)) {
+  if (o25 >= t.over25Strong && o15 >= 0.82 && selectionPassesThreshold(match, goalOver25, t, research)) {
     out.push(goalOver25);
   } else if (selectionPassesThreshold(match, goalOver15, t, research)) {
     out.push(goalOver15);
